@@ -1,87 +1,70 @@
 package com.example.thread2502020;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.util.Log;
+import android.widget.Toast;
+
+import java.util.Random;
 
 public class MainActivity extends AppCompatActivity {
 
-    MyFlag myFlag;
-    int a, b, c;
+
+    MyHandler myHandler;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        a = b = c = 0;
-        myFlag = new MyFlag(0);
+        myHandler = new MyHandler();
 
         Thread threadA = new Thread(new Runnable() {
             @Override
             public void run() {
-                synchronized (myFlag) {
-                    for (int i = 1; i <= 10;) {
-                        if (myFlag.position == 0){
-                            a = i++;
-                            Log.d("BBB", "Giá trị A : " + a);
-                            myFlag.position = 1;
-                            myFlag.notifyAll();
-                        }else{
-                            try {
-                                myFlag.wait();
-                            } catch (InterruptedException e) {
-                                e.printStackTrace();
-                            }
-                        }
-                    }
-                }
+                Bundle bundle = new Bundle();
+                bundle.putInt("threada",5);
+                Message message = myHandler.obtainMessage();
+                message.setData(bundle);
+                message.what = 1;
+                myHandler.sendMessage(message);
             }
         });
         Thread threadB = new Thread(new Runnable() {
             @Override
             public void run() {
-                synchronized (myFlag) {
-                    for (int i = 1; i <= 10;) {
-                        if (myFlag.position == 1){
-                            b = i++;
-                            Log.d("BBB", "Giá trị B : " + b);
-                            myFlag.position = 2;
-                            myFlag.notifyAll();
-                        }else{
-                            try {
-                                myFlag.wait();
-                            } catch (InterruptedException e) {
-                                e.printStackTrace();
-                            }
-                        }
-                    }
-                }
+                Bundle bundle = new Bundle();
+                bundle.putInt("threadb",10);
+                Message message = myHandler.obtainMessage();
+                message.setData(bundle);
+                message.what = 2;
+                myHandler.sendMessage(message);
             }
         });
-        Thread threadC = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                synchronized (myFlag) {
-                    for (int i = 1; i <= 10; ) {
-                        if (myFlag.position == 2){
-                            c = a + b;
-                            Log.d("BBB", "Giá trị C : " + c);
-                            myFlag.position = 0;
-                            myFlag.notifyAll();
-                            i++;
-                        }else{
-                            try {
-                                myFlag.wait();
-                            } catch (InterruptedException e) {
-                                e.printStackTrace();
-                            }
-                        }
-                    }
-                }
-            }
-        });
+
         threadA.start();
         threadB.start();
-        threadC.start();
+    }
+
+    class MyHandler extends Handler{
+        @Override
+        public void handleMessage(@NonNull Message msg) {
+            Bundle bundle = msg.getData();
+            switch (msg.what){
+                case 1 :
+                    if (bundle.getInt("threada",-1) != -1){
+                    Toast.makeText(MainActivity.this,bundle.getInt("threada",-1) + "", Toast.LENGTH_SHORT).show();
+                }
+                break;
+                case 2 :
+                    if (bundle.getInt("threadb",-1) != -1){
+                        Toast.makeText(MainActivity.this,bundle.getInt("threadb",-1) + "", Toast.LENGTH_SHORT).show();
+                    }
+                    break;
+            }
+            super.handleMessage(msg);
+        }
     }
 }
